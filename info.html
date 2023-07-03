@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <style>
+    #total-views {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <section class="hero is-info is-bold">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <h1 class="title">Content ID:</h1>
+        <h2 class="subtitle">
+          <p id="licenses" class="subtitle">Calculando...</p>
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    $(document).ready(function() {
+      // Obtener el ID del video desde los parámetros de la URL
+      var videoId = $.urlParam('video_id');
+      var API_KEY = $.urlParam('api_key');
+
+      if (!videoId) {
+        console.error('ID de video no proporcionado.');
+        return;
+      }
+
+      if (!API_KEY) {
+        console.error('API Key no proporcionada.');
+        return;
+      }
+
+      // Realizar las solicitudes a la API de YouTube para obtener los detalles del video
+      var videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,player,topicDetails,recordingDetails,liveStreamingDetails,localizations&id=${videoId}&key=${API_KEY}`;
+      var videoUrlSnippet = `https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id=${videoId}&key=${API_KEY}`;
+
+      $.when(
+        $.getJSON(videoUrl),
+        $.getJSON(videoUrlSnippet)
+      ).done(function(videoData, videoDatax) {
+        // Obtener las propiedades del video
+        var contentDetails = videoData[0].items[0].contentDetails;
+        var statistics = videoData[0].items[0].statistics;
+        var player = videoData[0].items[0].player;
+        var topicDetails = videoData[0].items[0].topicDetails;
+        var recordingDetails = videoData[0].items[0].recordingDetails;
+        var fileDetails = videoData[0].items[0].fileDetails;
+        var processingDetails = videoData[0].items[0].processingDetails;
+        var suggestions = videoData[0].items[0].suggestions;
+        var liveStreamingDetails = videoData[0].items[0].liveStreamingDetails;
+        var localizations = videoData[0].items[0].localizations;
+        
+        var snippet = videoDatax[0].items[0].snippet;
+        var status = videoDatax[0].items[0].status;
+
+        console.log(contentDetails);
+        console.log(statistics);
+        console.log(player);
+        console.log(topicDetails);
+        console.log(recordingDetails);
+        console.log(liveStreamingDetails);
+        console.log(localizations);
+        console.log(snippet);
+        console.log(status);
+
+        // Verificar si el contenido está licenciado
+        var isLicensed = contentDetails.licensedContent;
+
+        // Mostrar el estado de licencia en la página
+        var licensesText = isLicensed ? 'Licenciado' : 'No Licenciado';
+        var licensesColor = isLicensed ? 'green' : 'red';
+
+        // Mostrar las licencias en la página con el color correspondiente
+        $('#licenses').text(licensesText).css('color', licensesColor);
+      }).fail(function() {
+        console.error('Error al obtener los detalles del video con ID:', videoId);
+      });
+    });
+
+    // Función auxiliar para obtener parámetros de la URL
+    $.urlParam = function(name) {
+        var results = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.href);
+        return results !== null ? results[1] || 0 : null;
+      };
+  </script>
+</body>
+</html>
