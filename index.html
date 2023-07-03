@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <style>
+    #total-views {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <section class="hero is-info is-bold">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <h1 class="title">Total de vistas:</h1>
+        <h2 class="subtitle">
+          <p id="total-views" class="subtitle">Calculando...</p>
+        </h2>
+      </div>
+    </div>
+  </section>
+  
+
+  <script>
+    $(document).ready(function() {
+      // Obtener el ID de la lista de reproducción desde los parámetros de la URL
+      var playlistId = $.urlParam('playlist_id');
+      var API_KEY = $.urlParam('api_key');
+
+      if (!API_KEY) {
+        console.error('API Key no proporcionada.');
+        return;
+      }
+
+      // Realizar la solicitud a la API de YouTube para obtener los videos de la lista de reproducción
+      var playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}`;
+      $.getJSON(playlistUrl, function(playlistData) {
+        // Obtener los IDs de los videos de la respuesta
+        var videoIds = playlistData.items.map(function(item) {
+          return item.snippet.resourceId.videoId;
+        });
+
+        // Inicializar la suma total de vistas
+        var totalViews = 0;
+
+        // Iterar sobre los IDs de los videos
+        videoIds.forEach(function(videoId) {
+          // Realizar la solicitud a la API de YouTube para obtener las estadísticas del video
+          var videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${API_KEY}`;
+          $.getJSON(videoUrl, function(videoData) {
+            // Obtener el número de vistas del video
+            var views = parseInt(videoData.items[0].statistics.viewCount);
+
+            // Sumar las vistas al total
+            totalViews += views;
+
+            // Actualizar el valor en el HTML
+            $('#total-views').text(totalViews);
+          }).fail(function() {
+            console.error('Error al obtener las estadísticas del video con ID:', videoId);
+          });
+        });
+      }).fail(function() {
+        console.error('Error al obtener la lista de reproducción con ID:', playlistId);
+      });
+    });
+
+    // Función auxiliar para obtener parámetros de la URL
+    $.urlParam = function(name) {
+      var results = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.href);
+      return results !== null ? results[1] || 0 : null;
+    };
+  </script>
+</body>
+</html>
