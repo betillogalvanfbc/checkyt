@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <style>
+    #total-views {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <section class="hero is-info is-bold">
+    <div class="hero-body">
+        <input id="api-key-yt" class="input is-focused" type="text" placeholder="API Key Youtube">
+        <br>
+        <br>
+        <input id="video-id-input" class="input is-focused" type="text" placeholder="Video ID">
+        <br>
+        <br>
+        <button id="search-button" class="button is-success">Search</button>
+        <br>
+        <br>
+        <article class="message">
+            <div class="message-header">
+              <p>contentDetails :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="contentDetails-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+          <article class="message">
+            <div class="message-header">
+              <p>statistics :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="statistics-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+          <article class="message">
+            <div class="message-header">
+              <p>player :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="player-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+          <article class="message">
+            <div class="message-header">
+              <p>topicDetails :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="topicDetails-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+          <article class="message">
+            <div class="message-header">
+              <p>recordingDetails :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="recordingDetails-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+          <article class="message">
+            <div class="message-header">
+              <p>localizations :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="localizations-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+          <article class="message">
+            <div class="message-header">
+              <p>snippet :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="snippet-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+          <article class="message">
+            <div class="message-header">
+              <p>status :</p>
+              <button class="delete" aria-label="delete"></button>
+            </div>
+            <div id="status-yt"class="message-body">
+            Cargando..
+            </div>
+          </article>
+      <div class="container has-text-centered">
+        <h1 class="title">Content ID:</h1>
+        <h2 class="subtitle">
+          <p id="licenses" class="subtitle">Calculando...</p>
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    $(document).ready(function() {
+        $('#search-button').click(function() {
+            var videoId = $('#video-id-input').val();
+            var API_KEY = $('#api-key-yt').val();
+    
+            if (!videoId) {
+              console.error('ID de lista de reproducción no proporcionado.');
+              return;
+            }
+    
+            if (!API_KEY) {
+                console.error('API_KEY ERROR');
+                return;
+              }
+            
+      var videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,player,topicDetails,recordingDetails,liveStreamingDetails,localizations&id=${videoId}&key=${API_KEY}`;
+      var videoUrlSnippet = `https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id=${videoId}&key=${API_KEY}`;
+
+      $.when(
+        $.getJSON(videoUrl),
+        $.getJSON(videoUrlSnippet)
+      ).done(function(videoData, videoDatax) {
+
+        var contentDetails = videoData[0].items[0].contentDetails;
+        var statistics = videoData[0].items[0].statistics;
+        var player = videoData[0].items[0].player;
+        var topicDetails = videoData[0].items[0].topicDetails;
+        var recordingDetails = videoData[0].items[0].recordingDetails;
+        var fileDetails = videoData[0].items[0].fileDetails;
+        var processingDetails = videoData[0].items[0].processingDetails;
+        var suggestions = videoData[0].items[0].suggestions;
+        var liveStreamingDetails = videoData[0].items[0].liveStreamingDetails;
+        var localizations = videoData[0].items[0].localizations;
+        
+        var snippet = videoDatax[0].items[0].snippet;
+        var status = videoDatax[0].items[0].status;
+
+
+        var contentdetailsyt = JSON.stringify(contentDetails);
+        var statisticsyt = JSON.stringify(statistics);
+        var playeryt =  JSON.stringify(player);
+        var topicDetailsyt = JSON.stringify(topicDetails);
+        var recordingDetailsyt = JSON.stringify(recordingDetails);
+        var localizationsyt = JSON.stringify(localizations);
+        var snippetyt = JSON.stringify(snippet);
+        var statusyt = JSON.stringify(status);
+
+        $('#contentDetails-yt').text(contentdetailsyt);
+        $('#statistics-yt').text(statisticsyt);
+        $('#player-yt').text(playeryt);
+        $('#topicDetails-yt').text(topicDetailsyt);
+        $('#recordingDetails-yt').text(recordingDetailsyt);
+        $('#localizations-yt').text(localizationsyt);
+        $('#snippet-yt').text(snippetyt);
+        $('#status-yt').text(statusyt);
+
+        var isLicensed = contentDetails.licensedContent;
+        var licensesText = isLicensed ? 'Licenciado' : 'No Licenciado';
+        var licensesColor = isLicensed ? 'green' : 'red';
+        $('#licenses').text(licensesText).css('color', licensesColor);
+      }).fail(function() {
+        console.error('Error al obtener los detalles del video con ID:', videoId);
+      });
+    });
+    });
+  </script>
+</body>
+</html>
