@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <style>
+    #total-views {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <section class="hero is-info is-bold">
+    <div class="hero-body">
+      <div class="control">
+        <input id="api-key-yt" class="input is-focused" type="text" placeholder="API Key Youtube">
+        <br>
+        <br>
+        <input id="playlist-input" class="input is-focused" type="text" placeholder="Playlist ID">
+      <br>
+      <br>
+     <button id="search-button" class="button is-success">Search</button>
+      </div>
+      <div class="container has-text-centered">
+        <h1 class="title">Total de vistas En Playlist Proporcionado:</h1>
+        <h2 class="subtitle">
+          <p id="total-views" class="subtitle">Calculando...</p>
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    $(document).ready(function() {
+      $('#search-button').click(function() {
+        var playlistId = $('#playlist-input').val();
+        var API_KEY = $('#api-key-yt').val();
+
+        if (!playlistId) {
+          console.error('ID de lista de reproducción no proporcionado.');
+          return;
+        }
+
+        if (!API_KEY) {
+            console.error('API_KEY ERROR');
+            return;
+          }
+        var playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}`;
+        $.getJSON(playlistUrl, function(playlistData) {
+          var videoIds = playlistData.items.map(function(item) {
+            return item.snippet.resourceId.videoId;
+          });
+          var totalViews = 0;
+          videoIds.forEach(function(videoId) {
+            var videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${API_KEY}`;
+            $.getJSON(videoUrl, function(videoData) {
+              var views = parseInt(videoData.items[0].statistics.viewCount);
+              totalViews += views;
+              $('#total-views').text(totalViews);
+            }).fail(function() {
+              console.error('Error al obtener las estadísticas del video con ID:', videoId);
+            });
+          });
+        }).fail(function() {
+          console.error('Error al obtener la lista de reproducción con ID:', playlistId);
+        });
+      });
+    });
+
+  </script>
+</body>
+</html>
